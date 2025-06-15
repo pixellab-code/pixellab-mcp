@@ -16,19 +16,19 @@ Model Context Protocol (MCP) server for PixelLab pixel art generation and manipu
 
 ### Prerequisites
 
-- Node.js 16 or higher
+- Node.js 18 or higher (required for MCP SDK compatibility)
 - PixelLab API key (get one at [pixellab.ai](https://pixellab.ai))
 
 ### Install
 
 ```bash
-npm install -g mcp-pixellab
+npm install -g pixellab-mcp
 ```
 
 Or run directly with npx:
 
 ```bash
-npx mcp-pixellab --secret=your-pixellab-secret
+npx pixellab-mcp --secret=your-pixellab-secret
 ```
 
 ## Configuration
@@ -42,7 +42,7 @@ Add to your MCP client configuration (e.g., Claude Desktop) with your PixelLab s
   "mcpServers": {
     "pixellab": {
       "command": "npx",
-      "args": ["mcp-pixellab", "--secret=your-pixellab-secret-here"]
+      "args": ["pixellab-mcp", "--secret=your-pixellab-secret-here"]
     }
   }
 }
@@ -58,33 +58,10 @@ For development with a local API server:
     "pixellab": {
       "command": "npx",
       "args": [
-        "mcp-pixellab",
+        "pixellab-mcp",
         "--secret=your-pixellab-secret-here",
-        "--base-url=http://localhost:8000"
+        "--base-url=http://localhost:8000/v1"
       ]
-    }
-  }
-}
-```
-
-### Alternative: Environment Variables
-
-You can also use environment variables if preferred:
-
-```bash
-export PIXELLAB_SECRET="your_api_key_here"
-# Optional: for development only
-export PIXELLAB_BASE_URL="http://localhost:8000"
-```
-
-Then configure without arguments:
-
-```json
-{
-  "mcpServers": {
-    "pixellab": {
-      "command": "npx",
-      "args": ["mcp-pixellab"]
     }
   }
 }
@@ -98,16 +75,17 @@ Generate pixel art from text descriptions using PixelLab's Pixflux model.
 
 **Parameters:**
 
-- `description` (required): Text description of what to generate
-- `width` (default: 64): Image width in pixels
-- `height` (default: 64): Image height in pixels
-- `negative_description` (optional): What to avoid in the generation
-- `text_guidance_scale` (default: 8.0): How closely to follow the text
-- `no_background` (default: false): Generate without background
-- `outline` (optional): Outline style ("single color black outline", "selective outline", etc.)
-- `shading` (optional): Shading style ("flat shading", "basic shading", etc.)
+- `description` (required): Text description of what to generate (e.g., "cute dragon with sword", "medieval knight")
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
+- `negative_description` (optional): What to avoid in the generation (e.g., "blurry, ugly, distorted")
+- `text_guidance_scale` (default: 8.0): How closely to follow the text description (1.0-20.0)
+- `no_background` (default: false): Generate without background (useful for sprites)
+- `outline` (optional): Outline style ("single color black outline", "selective outline", "lineless", etc.)
+- `shading` (optional): Shading style ("flat shading", "basic shading", "detailed shading", etc.)
 - `detail` (optional): Detail level ("low detail", "medium detail", "highly detailed")
-- `save_to_file` (optional): Path to save the generated image
+- `save_to_file` (optional): Path to save the generated image (e.g., "./dragon.png")
+- `show_image` (default: false): Show the generated image to the AI assistant for viewing
 
 ### 2. `generate_pixel_art_with_style`
 
@@ -115,13 +93,14 @@ Generate pixel art using a reference image for style matching (Bitforge model).
 
 **Parameters:**
 
-- `description` (required): Text description of what to generate
+- `description` (required): Text description of what to generate (e.g., "warrior holding shield")
 - `style_image_path` (required): Path to reference style image
-- `width` (default: 64): Image width in pixels
-- `height` (default: 64): Image height in pixels
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
 - `style_strength` (default: 50.0): How strongly to match the style (0-100)
 - `no_background` (default: false): Generate without background
-- `save_to_file` (optional): Path to save the generated image
+- `save_to_file` (optional): Path to save the generated image (e.g., "./styled_character.png")
+- `show_image` (default: false): Show the generated image to the AI assistant for viewing
 
 ### 3. `rotate_character`
 
@@ -131,10 +110,11 @@ Generate rotated views of characters and objects.
 
 - `image_path` (required): Path to character/object image
 - `from_direction` (optional): Current direction ("south", "east", "north", "west", etc.)
-- `to_direction` (required): Direction to rotate to
-- `width` (default: 64): Image width in pixels
-- `height` (default: 64): Image height in pixels
-- `save_to_file` (optional): Path to save the rotated image
+- `to_direction` (required): Direction to rotate to ("south", "east", "north", "west", etc.)
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
+- `save_to_file` (optional): Path to save the rotated image (e.g., "./character_east.png")
+- `show_image` (default: false): Show before/after comparison to the AI assistant
 
 ### 4. `inpaint_pixel_art`
 
@@ -144,10 +124,11 @@ Edit existing pixel art by inpainting specific regions.
 
 - `image_path` (required): Path to image to edit
 - `mask_path` (required): Path to mask image (white = edit, black = keep)
-- `description` (required): Description of what to paint in the masked area
-- `width` (default: 64): Image width in pixels
-- `height` (default: 64): Image height in pixels
-- `save_to_file` (optional): Path to save the edited image
+- `description` (required): Description of what to paint in the masked area (e.g., "red hat", "golden armor")
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
+- `save_to_file` (optional): Path to save the edited image (e.g., "./character_with_hat.png")
+- `show_image` (default: false): Show before/after comparison to the AI assistant
 
 ### 5. `estimate_character_skeleton`
 
@@ -156,7 +137,7 @@ Extract skeleton structure from character images.
 **Parameters:**
 
 - `image_path` (required): Path to character image
-- `save_visualization` (optional): Path to save skeleton visualization
+- `show_image` (default: false): Show the original image with skeleton data to the AI assistant
 
 ### 6. `get_pixellab_balance`
 
@@ -174,7 +155,7 @@ Once configured with your MCP client, you can use natural language to interact w
 - "Add a hat to this character using inpainting"
 - "Check my PixelLab balance"
 
-The AI assistant will call the appropriate tools and display the generated pixel art immediately.
+The AI assistant will call the appropriate tools and display the generated pixel art immediately when `show_image` is enabled.
 
 ## Command Line Usage
 
@@ -182,10 +163,16 @@ You can also run the server directly:
 
 ```bash
 # Production usage (recommended)
-mcp-pixellab --secret=your-pixellab-secret
+pixellab-mcp --secret=your-pixellab-secret
+
+# Development with local API server
+pixellab-mcp --secret=your-secret --base-url=http://localhost:8000/v1
 
 # Using environment variables
-PIXELLAB_SECRET=your-secret mcp-pixellab
+PIXELLAB_SECRET=your-secret pixellab-mcp
+
+# Show help
+pixellab-mcp --help
 ```
 
 ## Development
@@ -194,7 +181,7 @@ PIXELLAB_SECRET=your-secret mcp-pixellab
 
 ```bash
 git clone <repository-url>
-cd mcp-pixellab
+cd pixellab-mcp
 npm install
 ```
 
@@ -217,22 +204,33 @@ npm run dev -- --secret=your-test-secret
 npm install -g @modelcontextprotocol/inspector
 
 # Test the server (production)
-mcp-inspector npx mcp-pixellab --secret=your-test-secret
+mcp-inspector npx pixellab-mcp --secret=your-test-secret
 
 # Test with local development server
-mcp-inspector npx mcp-pixellab --secret=your-test-secret --base-url=http://localhost:8000
+mcp-inspector npx pixellab-mcp --secret=your-test-secret --base-url=http://localhost:8000/v1
 ```
 
 ## Architecture
 
-This MCP server is built as a lightweight wrapper around the [pixellab-js](https://github.com/pixellab-code/pixellab-js) library, providing:
+This MCP server is built as a lightweight wrapper around the [@pixellab-code/pixellab](https://www.npmjs.com/package/@pixellab-code/pixellab) library, providing:
 
-- **Minimal overhead**: Direct passthrough to pixellab-js with format conversion only
-- **Type safety**: Full TypeScript support with Zod validation
-- **Error handling**: Comprehensive error handling and user-friendly messages
-- **Image visibility**: Generated images are immediately visible to AI assistants
-- **File management**: Optional file saving with automatic path handling
-- **Flexible configuration**: Command line arguments or environment variables
+- **Modular Design**: Each tool is implemented in its own file for maintainability
+- **Type Safety**: Full TypeScript support with Zod validation
+- **Error Handling**: Comprehensive error handling and user-friendly messages
+- **AI Vision**: Optional image visibility to AI assistants via MCP image protocol
+- **File Management**: Optional file saving with automatic path handling
+- **Flexible Configuration**: Command line arguments or environment variables
+
+## Tool Architecture
+
+The server implements 6 modular tools:
+
+- `src/tools/generatePixelArt.ts` - Pixflux text-to-pixel-art generation
+- `src/tools/generatePixelArtWithStyle.ts` - Bitforge style-transfer generation
+- `src/tools/getBalance.ts` - API credit checking
+- `src/tools/rotateCharacter.ts` - Character rotation with comparisons
+- `src/tools/inpaintPixelArt.ts` - Region-based editing with comparisons
+- `src/tools/estimateSkeleton.ts` - Skeleton detection with visualization
 
 ## Dependencies
 
