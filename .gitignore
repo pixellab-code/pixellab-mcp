@@ -1,1 +1,7 @@
 tests/results/
+.env.development.secrets
+coverage/
+dist/
+mcp-image-extractor/
+node_modules/
+pixellab-js/

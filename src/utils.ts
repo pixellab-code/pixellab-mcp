@@ -1,10 +1,10 @@
 import { Base64Image } from "@pixellab-code/pixellab";
 
-// MCP response type definition
+// MCP response type definition matching the SDK expectations
 export type McpToolResponse = {
   content: (
-    | { type: "text"; text: string }
-    | { type: "image"; data: string; mimeType: string }
+    | { [x: string]: unknown; type: "text"; text: string }
+    | { [x: string]: unknown; type: "image"; data: string; mimeType: string }
   )[];
   _meta?: Record<string, unknown>;
   isError?: boolean;

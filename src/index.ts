@@ -1,92 +1,101 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { PixelLabClient } from "@pixellab-code/pixellab";
 import { z } from "zod";
 import * as dotenv from "dotenv";
 
-// Reuse everything from pixellab-js
-import {
-  PixelLabClient,
-  Base64Image,
-  AuthenticationError,
-  ValidationError,
-  RateLimitError,
-  HttpError,
-} from "@pixellab-code/pixellab";
+// Import individual tools
+import { generatePixelArt } from "./tools/generatePixelArt.js";
+import { generatePixelArtWithStyle } from "./tools/generatePixelArtWithStyle.js";
+import { getBalance } from "./tools/getBalance.js";
+import { rotateCharacter } from "./tools/rotateCharacter.js";
+import { inpaintPixelArt } from "./tools/inpaintPixelArt.js";
+import { estimateSkeleton } from "./tools/estimateSkeleton.js";
 
-import { toMcpResponse, toMcpError, toMcpComparison } from "./utils.js";
-
+// Load environment variables
 dotenv.config();
 
 // Parse command line arguments
 const args = process.argv.slice(2);
-let pixellabSecret: string | undefined;
-let baseUrl: string | undefined;
+let secret = process.env.PIXELLAB_SECRET;
+let baseUrl = "https://api.pixellab.ai/v1"; // Default to production
 
-// Parse arguments in format: --secret=value --base-url=value
 for (const arg of args) {
   if (arg.startsWith("--secret=")) {
-    pixellabSecret = arg.split("=", 2)[1];
+    secret = arg.split("=")[1];
   } else if (arg.startsWith("--base-url=")) {
-    baseUrl = arg.split("=", 2)[1];
+    baseUrl = arg.split("=")[1];
+  } else if (arg === "--help" || arg === "-h") {
+    console.log(`
+PixelLab MCP Server
+
+Usage: pixellab-mcp [options]
+
+Options:
+  --secret=<key>      PixelLab API secret key (required)
+  --base-url=<url>    API base URL (default: https://api.pixellab.ai/v1)
+  --help, -h          Show this help message
+
+Examples:
+  pixellab-mcp --secret=your-api-key
+  pixellab-mcp --secret=your-key --base-url=http://localhost:8000/v1
+`);
+    process.exit(0);
   }
 }
 
-// Initialize PixelLab client with priority: CLI args > env vars
-let client: PixelLabClient;
-try {
-  const secret = pixellabSecret || process.env.PIXELLAB_SECRET;
-  const apiBaseUrl =
-    baseUrl || process.env.PIXELLAB_BASE_URL || "https://api.pixellab.ai/v1";
-
-  if (!secret) {
-    throw new Error(
-      "PixelLab secret is required. Provide via --secret=your-key or PIXELLAB_SECRET environment variable"
-    );
-  }
-
-  client = new PixelLabClient(secret, apiBaseUrl);
-} catch (error) {
-  console.error("Failed to initialize PixelLab client:", error);
-  console.error("\nUsage:");
-  console.error("  mcp-pixellab --secret=your-pixellab-secret");
-  console.error("\nDevelopment (with custom API endpoint):");
+if (!secret) {
   console.error(
-    "  mcp-pixellab --secret=your-key --base-url=http://localhost:8000"
+    "Error: PixelLab API secret is required. Use --secret=your-api-key"
   );
-  console.error("\nOr set environment variables:");
-  console.error("  PIXELLAB_SECRET=your-key mcp-pixellab");
   process.exit(1);
 }
 
+// Initialize PixelLab client
+const client = new PixelLabClient(secret, baseUrl);
+
 // Create MCP server
 const server = new McpServer({
-  name: "mcp-pixellab",
-  description:
-    "MCP server for PixelLab pixel art generation and manipulation. Generate characters, items, animations, and edit pixel art using AI-powered tools.",
+  name: "pixellab-mcp",
+  description: "MCP server for PixelLab pixel art generation and editing API",
   version: "1.0.0",
 });
 
-// Tool 1: Generate Pixel Art (Pixflux) - High Priority
+// Register tools
 server.tool(
   "generate_pixel_art",
-  "Generate pixel art characters, items, and environments from text descriptions",
+  "Generate pixel art from text description using Pixflux model. Perfect for creating characters, objects, and scenes in retro pixel art style.",
   {
-    description: z.string().describe("Text description of what to generate"),
-    width: z.number().default(64).describe("Image width in pixels"),
-    height: z.number().default(64).describe("Image height in pixels"),
+    description: z
+      .string()
+      .describe(
+        "Text description of what to generate (e.g., 'cute dragon with sword', 'medieval knight')"
+      ),
+    width: z
+      .number()
+      .default(64)
+      .describe("Image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe("Image height in pixels (recommended: 32, 64, 128, 256)"),
     negative_description: z
       .string()
       .optional()
-      .describe("What to avoid in the generation"),
+      .describe(
+        "What to avoid in the generation (e.g., 'blurry, ugly, distorted')"
+      ),
     text_guidance_scale: z
       .number()
       .default(8.0)
-      .describe("How closely to follow the text (higher = more faithful)"),
+      .describe(
+        "How closely to follow the text description (1.0-20.0, higher = more faithful to prompt)"
+      ),
     no_background: z
       .boolean()
       .default(false)
-      .describe("Generate without background"),
+      .describe("Generate character without background (useful for sprites)"),
     outline: z
       .enum([
         "single color black outline",
@@ -95,7 +104,7 @@ server.tool(
         "lineless",
       ])
       .optional()
-      .describe("Outline style"),
+      .describe("Outline style for the pixel art"),
     shading: z
       .enum([
         "flat shading",
@@ -105,140 +114,89 @@ server.tool(
         "highly detailed shading",
       ])
       .optional()
-      .describe("Shading style"),
+      .describe("Shading complexity level"),
     detail: z
       .enum(["low detail", "medium detail", "highly detailed"])
       .optional()
-      .describe("Detail level"),
+      .describe("Overall detail level of the generated art"),
     save_to_file: z
       .string()
       .optional()
-      .describe("Path to save the generated image"),
+      .describe(
+        "Optional file path to save the generated image (e.g., './dragon.png')"
+      ),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Whether to show the generated image to the AI assistant for viewing and analysis"
+      ),
   },
-  async (args) => {
-    try {
-      // Direct passthrough to pixellab-js - no duplication
-      const response = await client.generateImagePixflux({
-        description: args.description,
-        imageSize: { width: args.width, height: args.height },
-        negativeDescription: args.negative_description,
-        textGuidanceScale: args.text_guidance_scale,
-        noBackground: args.no_background,
-        outline: args.outline,
-        shading: args.shading,
-        detail: args.detail,
-      });
-
-      // Optional file save using existing Base64Image.saveToFile()
-      if (args.save_to_file) {
-        await response.image.saveToFile(args.save_to_file);
-      }
-
-      // Simple format conversion only
-      return toMcpResponse(
-        `Generated pixel art: ${args.description} (${args.width}×${args.height} pixels)`,
-        response.image,
-        {
-          parameters: args,
-          dimensions: { width: args.width, height: args.height },
-          filePath: args.save_to_file,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    } catch (error) {
-      // Reuse existing error handling
-      return toMcpError(error);
-    }
-  }
+  async (args) => generatePixelArt(args, client)
 );
 
-// Tool 2: Get PixelLab Balance - High Priority
-server.tool(
-  "get_pixellab_balance",
-  "Check available PixelLab API credits",
-  {},
-  async () => {
-    try {
-      const balance = await client.getBalance();
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `PixelLab Balance: ${balance.usd} USD\nAccount status: Active`,
-          },
-        ],
-      };
-    } catch (error) {
-      return toMcpError(error);
-    }
-  }
-);
-
-// Tool 3: Generate Pixel Art with Style (Bitforge) - High Priority
 server.tool(
   "generate_pixel_art_with_style",
-  "Generate pixel art using a reference image to match a specific art style",
+  "Generate pixel art using a reference style image with Bitforge model. Upload a style reference to match its artistic style while generating new content.",
   {
-    description: z.string().describe("Text description of what to generate"),
-    style_image_path: z.string().describe("Path to reference style image"),
-    width: z.number().default(64).describe("Image width in pixels"),
-    height: z.number().default(64).describe("Image height in pixels"),
+    description: z
+      .string()
+      .describe(
+        "Text description of what to generate (e.g., 'warrior holding shield')"
+      ),
+    style_image_path: z
+      .string()
+      .describe(
+        "Path to reference style image that defines the art style to match"
+      ),
+    width: z
+      .number()
+      .default(64)
+      .describe("Image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe("Image height in pixels (recommended: 32, 64, 128, 256)"),
     style_strength: z
       .number()
       .default(50.0)
-      .describe("How strongly to match the style (0-100)"),
+      .describe(
+        "How strongly to match the reference style (0-100, higher = more similar to reference)"
+      ),
     no_background: z
       .boolean()
       .default(false)
-      .describe("Generate without background"),
+      .describe("Generate character without background (useful for sprites)"),
     save_to_file: z
       .string()
       .optional()
-      .describe("Path to save the generated image"),
+      .describe(
+        "Optional file path to save the generated image (e.g., './styled_character.png')"
+      ),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Whether to show the generated image to the AI assistant for viewing and analysis"
+      ),
   },
-  async (args) => {
-    try {
-      // Load style image using Base64Image
-      const styleImage = await Base64Image.fromFile(args.style_image_path);
-
-      // Direct passthrough to pixellab-js
-      const response = await client.generateImageBitforge({
-        description: args.description,
-        imageSize: { width: args.width, height: args.height },
-        styleImage,
-        styleStrength: args.style_strength,
-        noBackground: args.no_background,
-      });
-
-      // Optional file save
-      if (args.save_to_file) {
-        await response.image.saveToFile(args.save_to_file);
-      }
-
-      return toMcpResponse(
-        `Generated pixel art with style: ${args.description} (${args.width}×${args.height} pixels, style strength: ${args.style_strength}%)`,
-        response.image,
-        {
-          parameters: args,
-          styleReference: args.style_image_path,
-          dimensions: { width: args.width, height: args.height },
-          filePath: args.save_to_file,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    } catch (error) {
-      return toMcpError(error);
-    }
-  }
+  async (args) => generatePixelArtWithStyle(args, client)
 );
 
-// Tool 4: Rotate Character - Medium Priority
+server.tool(
+  "get_pixellab_balance",
+  "Check your PixelLab API account balance and usage credits.",
+  {},
+  async (args) => getBalance(args, client)
+);
+
 server.tool(
   "rotate_character",
-  "Generate rotated views of characters and objects",
+  "Rotate a character or object to face a different direction. Useful for creating sprite sheets or changing character poses.",
   {
-    image_path: z.string().describe("Path to character/object image"),
+    image_path: z
+      .string()
+      .describe("Path to the character or object image to rotate"),
     from_direction: z
       .enum([
         "south",
@@ -251,7 +209,9 @@ server.tool(
         "south-west",
       ])
       .optional()
-      .describe("Current direction of the character"),
+      .describe(
+        "Current direction the character is facing (if known, helps with accuracy)"
+      ),
     to_direction: z
       .enum([
         "south",
@@ -263,171 +223,103 @@ server.tool(
         "west",
         "south-west",
       ])
-      .describe("Direction to rotate to"),
-    width: z.number().default(64).describe("Image width in pixels"),
-    height: z.number().default(64).describe("Image height in pixels"),
+      .describe("Target direction to rotate the character to face"),
+    width: z
+      .number()
+      .default(64)
+      .describe("Output image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe(
+        "Output image height in pixels (recommended: 32, 64, 128, 256)"
+      ),
     save_to_file: z
       .string()
       .optional()
-      .describe("Path to save the rotated image"),
+      .describe(
+        "Optional file path to save the rotated image (e.g., './character_east.png')"
+      ),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Whether to show the before/after comparison to the AI assistant for viewing and analysis"
+      ),
   },
-  async (args) => {
-    try {
-      // Load original image
-      const originalImage = await Base64Image.fromFile(args.image_path);
-
-      // Direct passthrough to pixellab-js
-      const response = await client.rotate({
-        imageSize: { width: args.width, height: args.height },
-        fromImage: originalImage,
-        fromDirection: args.from_direction,
-        toDirection: args.to_direction,
-      });
-
-      // Optional file save
-      if (args.save_to_file) {
-        await response.image.saveToFile(args.save_to_file);
-      }
-
-      return toMcpComparison(
-        `Rotated character from ${args.from_direction || "current view"} to ${
-          args.to_direction
-        }`,
-        originalImage,
-        response.image,
-        {
-          parameters: args,
-          dimensions: { width: args.width, height: args.height },
-          filePath: args.save_to_file,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    } catch (error) {
-      return toMcpError(error);
-    }
-  }
+  async (args) => rotateCharacter(args, client)
 );
 
-// Tool 5: Inpaint Pixel Art - Medium Priority
 server.tool(
   "inpaint_pixel_art",
-  "Edit existing pixel art by inpainting specific regions",
+  "Edit specific regions of pixel art using a mask. Paint new elements like hats, armor, or accessories onto existing characters.",
   {
-    image_path: z.string().describe("Path to image to edit"),
+    image_path: z
+      .string()
+      .describe("Path to the original pixel art image to edit"),
     mask_path: z
       .string()
-      .describe("Path to mask image (white = edit, black = keep)"),
+      .describe(
+        "Path to mask image where white pixels = areas to edit/replace, black pixels = areas to keep unchanged"
+      ),
     description: z
       .string()
-      .describe("Description of what to paint in the masked area"),
-    width: z.number().default(64).describe("Image width in pixels"),
-    height: z.number().default(64).describe("Image height in pixels"),
+      .describe(
+        "Description of what to paint in the masked area (e.g., 'red hat', 'golden armor', 'blue cape')"
+      ),
+    width: z
+      .number()
+      .default(64)
+      .describe("Output image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe(
+        "Output image height in pixels (recommended: 32, 64, 128, 256)"
+      ),
     save_to_file: z
       .string()
       .optional()
-      .describe("Path to save the edited image"),
+      .describe(
+        "Optional file path to save the edited image (e.g., './character_with_hat.png')"
+      ),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Whether to show the before/after comparison to the AI assistant for viewing and analysis"
+      ),
   },
-  async (args) => {
-    try {
-      // Load original and mask images
-      const originalImage = await Base64Image.fromFile(args.image_path);
-      const maskImage = await Base64Image.fromFile(args.mask_path);
-
-      // Direct passthrough to pixellab-js
-      const response = await client.inpaint({
-        description: args.description,
-        imageSize: { width: args.width, height: args.height },
-        inpaintingImage: originalImage,
-        maskImage: maskImage,
-      });
-
-      // Optional file save
-      if (args.save_to_file) {
-        await response.image.saveToFile(args.save_to_file);
-      }
-
-      return toMcpComparison(
-        `Inpainted pixel art: ${args.description}`,
-        originalImage,
-        response.image,
-        {
-          parameters: args,
-          dimensions: { width: args.width, height: args.height },
-          filePath: args.save_to_file,
-          timestamp: new Date().toISOString(),
-        }
-      );
-    } catch (error) {
-      return toMcpError(error);
-    }
-  }
+  async (args) => inpaintPixelArt(args, client)
 );
 
-// Tool 6: Estimate Character Skeleton - Medium Priority
 server.tool(
   "estimate_character_skeleton",
-  "Extract skeleton structure from character images",
+  "Analyze a character image to detect skeleton/pose keypoints. Useful for understanding character structure and poses.",
   {
-    image_path: z.string().describe("Path to character image"),
-    save_visualization: z
+    image_path: z
       .string()
-      .optional()
-      .describe("Path to save skeleton visualization"),
+      .describe(
+        "Path to the character image to analyze for skeleton/pose detection"
+      ),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe(
+        "Whether to show the original image with skeleton data to the AI assistant for viewing and analysis"
+      ),
   },
-  async (args) => {
-    try {
-      // Load character image
-      const characterImage = await Base64Image.fromFile(args.image_path);
-
-      // Direct passthrough to pixellab-js
-      const response = await client.estimateSkeleton({
-        image: characterImage,
-      });
-
-      // Create visualization if requested (simple overlay for now)
-      if (args.save_visualization) {
-        // For now, save the original image - could enhance with skeleton overlay
-        await characterImage.saveToFile(args.save_visualization);
-      }
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Estimated skeleton for character image: ${response.keypoints.length} keypoints detected`,
-          },
-          {
-            type: "image",
-            data: characterImage.dataUrl,
-            mimeType: "image/png",
-          },
-          { type: "text", text: "Skeleton data:" },
-          {
-            type: "text",
-            text: JSON.stringify(
-              {
-                keypoints: response.keypoints,
-                usage: response.usage,
-                parameters: args,
-                timestamp: new Date().toISOString(),
-              },
-              null,
-              2
-            ),
-          },
-        ],
-      };
-    } catch (error) {
-      return toMcpError(error);
-    }
-  }
+  async (args) => estimateSkeleton(args, client)
 );
 
-// Start the server using stdio transport
-const transport = new StdioServerTransport();
-server.connect(transport).catch((error: unknown) => {
-  console.error("Error starting MCP server:", error);
+// Start the server
+async function main() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("PixelLab MCP Server running on stdio");
+}
+
+main().catch((error) => {
+  console.error("Server error:", error);
   process.exit(1);
 });
-
-console.error("PixelLab MCP server started in stdio mode");

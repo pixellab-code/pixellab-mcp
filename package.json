@@ -1,6 +1,7 @@
 {
   "name": "pixellab-mcp",
   "version": "1.0.0",
+  "type": "module",
   "description": "MCP server for PixelLab pixel art generation and manipulation. Usage: pixellab-mcp --secret=your-key",
   "main": "dist/index.js",
   "bin": {
