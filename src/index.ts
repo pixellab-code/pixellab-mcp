@@ -64,7 +64,7 @@ const server = new McpServer({
 
 // Register tools
 server.tool(
-  "generate_pixel_art",
+  "generate_image_pixflux",
   "Generate pixel art from text description using Pixflux model. Perfect for creating characters, objects, and scenes in retro pixel art style.",
   {
     description: z
@@ -136,7 +136,7 @@ server.tool(
 );
 
 server.tool(
-  "generate_pixel_art_with_style",
+  "generate_image_bitforge",
   "Generate pixel art using a reference style image with Bitforge model. Upload a style reference to match its artistic style while generating new content.",
   {
     description: z
@@ -184,14 +184,14 @@ server.tool(
 );
 
 server.tool(
-  "get_pixellab_balance",
+  "get_balance",
   "Check your PixelLab API account balance and usage credits.",
   {},
   async (args) => getBalance(args, client)
 );
 
 server.tool(
-  "rotate_character",
+  "rotate",
   "Rotate a character or object to face a different direction. Useful for creating sprite sheets or changing character poses.",
   {
     image_path: z
@@ -251,7 +251,7 @@ server.tool(
 );
 
 server.tool(
-  "inpaint_pixel_art",
+  "inpaint",
   "Edit specific regions of pixel art using a mask. Paint new elements like hats, armor, or accessories onto existing characters.",
   {
     image_path: z
@@ -294,7 +294,7 @@ server.tool(
 );
 
 server.tool(
-  "estimate_character_skeleton",
+  "estimate_skeleton",
   "Analyze a character image to detect skeleton/pose keypoints. Useful for understanding character structure and poses.",
   {
     image_path: z

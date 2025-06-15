@@ -69,7 +69,7 @@ For development with a local API server:
 
 ## Available Tools
 
-### 1. `generate_pixel_art`
+### 1. `generate_image_pixflux`
 
 Generate pixel art from text descriptions using PixelLab's Pixflux model.
 
@@ -87,7 +87,7 @@ Generate pixel art from text descriptions using PixelLab's Pixflux model.
 - `save_to_file` (optional): Path to save the generated image (e.g., "./dragon.png")
 - `show_image` (default: false): Show the generated image to the AI assistant for viewing
 
-### 2. `generate_pixel_art_with_style`
+### 2. `generate_image_bitforge`
 
 Generate pixel art using a reference image for style matching (Bitforge model).
 
@@ -102,7 +102,7 @@ Generate pixel art using a reference image for style matching (Bitforge model).
 - `save_to_file` (optional): Path to save the generated image (e.g., "./styled_character.png")
 - `show_image` (default: false): Show the generated image to the AI assistant for viewing
 
-### 3. `rotate_character`
+### 3. `rotate`
 
 Generate rotated views of characters and objects.
 
@@ -116,7 +116,7 @@ Generate rotated views of characters and objects.
 - `save_to_file` (optional): Path to save the rotated image (e.g., "./character_east.png")
 - `show_image` (default: false): Show before/after comparison to the AI assistant
 
-### 4. `inpaint_pixel_art`
+### 4. `inpaint`
 
 Edit existing pixel art by inpainting specific regions.
 
@@ -130,7 +130,7 @@ Edit existing pixel art by inpainting specific regions.
 - `save_to_file` (optional): Path to save the edited image (e.g., "./character_with_hat.png")
 - `show_image` (default: false): Show before/after comparison to the AI assistant
 
-### 5. `estimate_character_skeleton`
+### 5. `estimate_skeleton`
 
 Extract skeleton structure from character images.
 
@@ -139,7 +139,7 @@ Extract skeleton structure from character images.
 - `image_path` (required): Path to character image
 - `show_image` (default: false): Show the original image with skeleton data to the AI assistant
 
-### 6. `get_pixellab_balance`
+### 6. `get_balance`
 
 Check available PixelLab API credits.
 
