@@ -6,8 +6,8 @@ export async function sleep(ms: number): Promise<void> {
 
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 2000
+  maxRetries: number = 5,
+  baseDelay: number = 5000
 ): Promise<T> {
   let lastError: Error;
 
@@ -17,7 +17,12 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       lastError = error as Error;
 
-      if (error instanceof RateLimitError && attempt < maxRetries) {
+      // Check for rate limit in error message as well as RateLimitError type
+      const isRateLimit =
+        error instanceof RateLimitError ||
+        (error as Error).message?.includes("wait longer between generations");
+
+      if (isRateLimit && attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
         console.log(
           `Rate limit hit, waiting ${delay}ms before retry ${

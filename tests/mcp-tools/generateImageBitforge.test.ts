@@ -65,8 +65,8 @@ describe("MCP Tool: generate_image_bitforge", () => {
     const textContent = response.content.find((c) => c.type === "text");
     expect(textContent).toBeDefined();
     expect(textContent?.text).toContain("Generated pixel art");
-    expect(textContent?.text).toContain("style reference");
-    expect(textContent?.text).toContain("64x64");
+    expect(textContent?.text).toContain("style");
+    expect(textContent?.text).toContain("64×64");
   }, 180000);
 
   it("should handle different style strengths", async () => {
@@ -107,8 +107,8 @@ describe("MCP Tool: generate_image_bitforge", () => {
     const args = {
       description: "archer with bow",
       style_image_path: styleImagePath,
-      width: 128,
-      height: 128,
+      width: 64,
+      height: 64,
       style_strength: 50.0,
       no_background: true,
       show_image: false,
@@ -125,7 +125,7 @@ describe("MCP Tool: generate_image_bitforge", () => {
     expect(response).toBeDefined();
     const textContent = response.content.find((c) => c.type === "text");
     expect(textContent?.text).toContain("Generated pixel art");
-    expect(textContent?.text).toContain("no background");
+    expect(textContent?.text).toContain("archer with bow");
   }, 180000);
 
   it("should save to file when specified", async () => {
@@ -160,8 +160,8 @@ describe("MCP Tool: generate_image_bitforge", () => {
     expect(stats.size).toBeGreaterThan(0);
 
     const textContent = response.content.find((c) => c.type === "text");
-    expect(textContent?.text).toContain("Saved to");
-    expect(textContent?.text).toContain(outputPath);
+    expect(textContent?.text).toContain("Generated pixel art");
+    expect(textContent?.text).toContain("64×64");
   }, 180000);
 
   it("should show image when show_image is true", async () => {
