@@ -15,8 +15,8 @@
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "lint": "eslint src --ext .ts",
-    "test": "jest --no-cache --passWithNoTests",
-    "test:ci": "jest --ci",
+    "test": "jest --no-cache --passWithNoTests --maxWorkers=1",
+    "test:ci": "jest --ci --maxWorkers=1",
     "prepublishOnly": "npm run build",
     "example": "npm start -- --secret=your-pixellab-secret-here",
     "example:dev": "npm start -- --secret=your-key --base-url=http://localhost:8000"

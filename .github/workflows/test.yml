@@ -35,7 +35,8 @@ jobs:
           echo "PIXELLAB_SECRET=${{ secrets.PIXELLAB_SECRET }}" > .env.development.secrets
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --maxWorkers=1 --testTimeout=900000
+        timeout-minutes: 30
 
       - name: Build package
         run: npm run build

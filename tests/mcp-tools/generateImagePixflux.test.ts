@@ -29,8 +29,8 @@ describe("MCP Tool: generate_image_pixflux", () => {
       async () => {
         return await generatePixelArt(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -61,8 +61,8 @@ describe("MCP Tool: generate_image_pixflux", () => {
       async () => {
         return await generatePixelArt(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -90,8 +90,8 @@ describe("MCP Tool: generate_image_pixflux", () => {
       async () => {
         return await generatePixelArt(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -118,8 +118,8 @@ describe("MCP Tool: generate_image_pixflux", () => {
       async () => {
         return await generatePixelArt(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -148,8 +148,8 @@ describe("MCP Tool: generate_image_pixflux", () => {
       async () => {
         return await generatePixelArt(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();

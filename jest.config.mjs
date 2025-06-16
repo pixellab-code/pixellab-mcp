@@ -27,4 +27,5 @@ export default {
   roots: ["<rootDir>/src", "<rootDir>/tests"],
   maxWorkers: 1,
   testTimeout: 300000,
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
 };

@@ -52,8 +52,8 @@ describe("MCP Tool: rotate", () => {
       async () => {
         return await rotateCharacter(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -82,8 +82,8 @@ describe("MCP Tool: rotate", () => {
       async () => {
         return await rotateCharacter(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -108,8 +108,8 @@ describe("MCP Tool: rotate", () => {
       async () => {
         return await rotateCharacter(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -136,8 +136,8 @@ describe("MCP Tool: rotate", () => {
       async () => {
         return await rotateCharacter(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -167,8 +167,8 @@ describe("MCP Tool: rotate", () => {
       async () => {
         return await rotateCharacter(args, client);
       },
-      5,
-      3000
+      8,
+      10000
     );
 
     expect(response).toBeDefined();
@@ -215,8 +215,8 @@ describe("MCP Tool: rotate", () => {
         async () => {
           return await rotateCharacter(args, client);
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
