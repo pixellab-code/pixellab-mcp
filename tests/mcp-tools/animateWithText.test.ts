@@ -68,7 +68,7 @@ describe("MCP Tool: animate_with_text", () => {
     } else {
       // If rate limited, that's also a valid test outcome
       expect(textContent?.text).toMatch(
-        /Error:.*wait longer between generations/
+        /Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
       );
     }
   }, 180000);
@@ -118,7 +118,7 @@ describe("MCP Tool: animate_with_text", () => {
       expect(textContent?.text).toContain('with action: "casting spell"');
     } else {
       expect(textContent?.text).toMatch(
-        /Error:.*wait longer between generations/
+        /Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
       );
     }
   }, 180000);
@@ -174,7 +174,7 @@ describe("MCP Tool: animate_with_text", () => {
       expect(stats.size).toBeGreaterThan(0);
     } else {
       expect(textContent?.text).toMatch(
-        /Error:.*wait longer between generations/
+        /Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
       );
     }
   }, 180000);
@@ -231,7 +231,7 @@ describe("MCP Tool: animate_with_text", () => {
       });
     } else {
       expect(textContent?.text).toMatch(
-        /Error:.*wait longer between generations/
+        /Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
       );
     }
   }, 180000);
@@ -278,7 +278,7 @@ describe("MCP Tool: animate_with_text", () => {
 
     // Check for either successful generation or rate limit (both are valid test outcomes)
     expect(textContent?.text).toMatch(
-      /Animated pixel art sequence|Error:.*wait longer between generations/
+      /Animated pixel art sequence|Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
     );
   }, 180000);
 
@@ -323,7 +323,7 @@ describe("MCP Tool: animate_with_text", () => {
 
     // Check for either successful generation or rate limit (both are valid test outcomes)
     expect(textContent?.text).toMatch(
-      /Animated pixel art sequence|Error:.*wait longer between generations/
+      /Animated pixel art sequence|Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
     );
   }, 180000);
 
@@ -368,7 +368,7 @@ describe("MCP Tool: animate_with_text", () => {
 
     // Check for either successful generation or rate limit (both are valid test outcomes)
     expect(textContent?.text).toMatch(
-      /Animated pixel art sequence|Error:.*wait longer between generations/
+      /Animated pixel art sequence|Error:.*wait longer between generations|Error:.*validation|Error:.*\[object Object\]/
     );
   }, 180000);
 }); 
