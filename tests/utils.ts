@@ -6,8 +6,8 @@ export async function sleep(ms: number): Promise<void> {
 
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 5,
-  baseDelay: number = 5000
+  maxRetries: number = 8,
+  baseDelay: number = 15000
 ): Promise<T> {
   let lastError: Error;
 
