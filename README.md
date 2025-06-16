@@ -19,23 +19,17 @@ Model Context Protocol (MCP) server for PixelLab pixel art generation and manipu
 - Node.js 18 or higher (required for MCP SDK compatibility)
 - PixelLab API key (get one at [pixellab.ai](https://pixellab.ai))
 
-### Install
+### Install Globally (Required for MCP Clients)
+
+For use with MCP clients like Cursor, Claude Desktop, etc., you **must install globally**:
 
 ```bash
 npm install -g pixellab-mcp
 ```
 
-Or run directly with npx:
-
-```bash
-npx pixellab-mcp --secret=your-pixellab-secret
-```
-
 ## Configuration
 
-### MCP Client Configuration (Recommended)
-
-Add to your MCP client configuration (e.g., Claude Desktop) with your PixelLab secret:
+Add to your MCP client configuration (e.g., Cursor or Claude Desktop) with your PixelLab secret:
 
 ```json
 {
@@ -43,25 +37,6 @@ Add to your MCP client configuration (e.g., Claude Desktop) with your PixelLab s
     "pixellab": {
       "command": "npx",
       "args": ["pixellab-mcp", "--secret=your-pixellab-secret-here"]
-    }
-  }
-}
-```
-
-### Development Configuration
-
-For development with a local API server:
-
-```json
-{
-  "mcpServers": {
-    "pixellab": {
-      "command": "npx",
-      "args": [
-        "pixellab-mcp",
-        "--secret=your-pixellab-secret-here",
-        "--base-url=http://localhost:8000/v1"
-      ]
     }
   }
 }
@@ -238,6 +213,65 @@ The server implements 6 modular tools:
 - `@pixellab-code/pixellab`: PixelLab JavaScript client
 - `zod`: Runtime type validation
 - `dotenv`: Environment variable management
+
+## Troubleshooting
+
+### MCP Server Connection Issues
+
+**Problem**: MCP client shows "Connection closed" or "No server info found"
+
+**Solution**: Ensure the package is installed globally:
+
+```bash
+npm install -g pixellab-mcp
+```
+
+**Problem**: Server starts but immediately exits
+
+**Causes & Solutions**:
+
+1. **Invalid API key**: Verify your PixelLab secret is correct
+2. **Package not found**: Install globally (see above)
+3. **Node.js version**: Ensure Node.js 18+ is installed
+4. **Directory issues**: Use absolute paths if needed:
+
+```json
+{
+  "mcpServers": {
+    "pixellab": {
+      "command": "node",
+      "args": ["/path/to/pixellab-mcp/dist/index.js", "--secret=your-secret"]
+    }
+  }
+}
+```
+
+**Problem**: Server shows fewer than 6 tools
+
+**Solution**: You should see these 6 tools:
+- `generate_image_pixflux`
+- `generate_image_bitforge`
+- `get_balance`
+- `rotate`
+- `inpaint`
+- `estimate_skeleton`
+
+If you see fewer, try:
+1. Restart your MCP client completely
+2. Reinstall globally: `npm uninstall -g pixellab-mcp && npm install -g pixellab-mcp`
+3. Check for conflicting server configurations
+
+### Testing the Server
+
+Test manually before adding to MCP client:
+
+```bash
+# Test help (should show usage)
+pixellab-mcp --help
+
+# Test server startup (should show "PixelLab MCP Server running on stdio")
+timeout 5s pixellab-mcp --secret=your-secret
+```
 
 ## License
 
