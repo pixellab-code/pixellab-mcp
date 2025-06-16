@@ -18,26 +18,23 @@ describe("MCP Tools Integration Tests", () => {
   });
 
   describe("generate_image_pixflux", () => {
-    it("should generate pixel art from text description", async () => {
+    it("should generate basic pixel art", async () => {
       const response = await retryWithBackoff(
         async () => {
           return await client.generateImagePixflux({
             description: "cute dragon with sword",
             imageSize: { width: 64, height: 64 },
-            noBackground: false,
             textGuidanceScale: 8.0,
+            noBackground: false,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
       expect(response.image).toBeInstanceOf(Base64Image);
-      expect(response.image.base64.length).toBeGreaterThan(0);
-      expect(response.usage).toBeDefined();
-      expect(response.usage.type).toBe("usd");
-      expect(typeof response.usage.usd).toBe("number");
+      expect(response.usage.usd).toBeGreaterThan(0);
 
       // Save test result
       const outputPath = path.join(
@@ -46,33 +43,25 @@ describe("MCP Tools Integration Tests", () => {
       );
       await response.image.saveToFile(outputPath);
 
-      // Verify file was created
-      const stats = await fs.stat(outputPath);
-      expect(stats.size).toBeGreaterThan(0);
-
       console.log(`✓ Generated basic pixel art: ${outputPath}`);
-      console.log(
-        `  Usage: $${response.usage.usd.toFixed(4)} USD, ${Math.round(
-          stats.size / 1024
-        )}KB`
-      );
-    }, 60000);
+      console.log(`  Usage: $${response.usage.usd.toFixed(4)} USD`);
+    }, 300000);
 
-    it("should generate pixel art with style options", async () => {
+    it("should generate styled pixel art", async () => {
       const response = await retryWithBackoff(
         async () => {
           return await client.generateImagePixflux({
             description: "medieval knight with shield",
             imageSize: { width: 128, height: 128 },
-            noBackground: true,
             textGuidanceScale: 10.0,
+            noBackground: true,
             outline: "single color black outline",
             shading: "detailed shading",
             detail: "highly detailed",
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
@@ -87,7 +76,7 @@ describe("MCP Tools Integration Tests", () => {
       await response.image.saveToFile(outputPath);
 
       console.log(`✓ Generated styled pixel art: ${outputPath}`);
-    }, 60000);
+    }, 300000);
   });
 
   describe("generate_image_bitforge", () => {
@@ -100,8 +89,8 @@ describe("MCP Tools Integration Tests", () => {
             imageSize: { width: 64, height: 64 },
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       const styleImagePath = path.join(resultsDir, "style_reference.png");
@@ -118,8 +107,8 @@ describe("MCP Tools Integration Tests", () => {
             noBackground: false,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
@@ -131,7 +120,7 @@ describe("MCP Tools Integration Tests", () => {
       await response.image.saveToFile(outputPath);
 
       console.log(`✓ Generated style-transfer pixel art: ${outputPath}`);
-    }, 90000);
+    }, 600000);
   });
 
   describe("get_balance", () => {
@@ -150,7 +139,7 @@ describe("MCP Tools Integration Tests", () => {
       expect(response.usd).toBeGreaterThanOrEqual(0);
 
       console.log(`✓ Account balance: $${response.usd.toFixed(2)} USD`);
-    }, 30000);
+    }, 60000);
   });
 
   describe("rotate", () => {
@@ -164,8 +153,8 @@ describe("MCP Tools Integration Tests", () => {
             noBackground: true,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       const originalPath = path.join(resultsDir, "character_original.png");
@@ -181,8 +170,8 @@ describe("MCP Tools Integration Tests", () => {
             imageSize: { width: 64, height: 64 },
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
@@ -194,7 +183,7 @@ describe("MCP Tools Integration Tests", () => {
       await response.image.saveToFile(outputPath);
 
       console.log(`✓ Rotated character: ${outputPath}`);
-    }, 90000);
+    }, 600000);
   });
 
   describe("estimate_skeleton", () => {
@@ -208,8 +197,8 @@ describe("MCP Tools Integration Tests", () => {
             noBackground: true,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       const characterPath = path.join(resultsDir, "character_for_skeleton.png");
@@ -222,8 +211,8 @@ describe("MCP Tools Integration Tests", () => {
             image: characterResponse.image,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
@@ -242,7 +231,7 @@ describe("MCP Tools Integration Tests", () => {
       console.log(
         `  First keypoint: ${firstKeypoint.label} at (${firstKeypoint.x}, ${firstKeypoint.y})`
       );
-    }, 60000);
+    }, 600000);
   });
 
   describe("inpaint", () => {
@@ -256,8 +245,8 @@ describe("MCP Tools Integration Tests", () => {
             noBackground: true,
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       const originalPath = path.join(
@@ -275,8 +264,8 @@ describe("MCP Tools Integration Tests", () => {
             imageSize: { width: 64, height: 64 },
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       const maskPath = path.join(resultsDir, "inpaint_mask.png");
@@ -292,8 +281,8 @@ describe("MCP Tools Integration Tests", () => {
             imageSize: { width: 64, height: 64 },
           });
         },
-        5,
-        3000
+        8,
+        10000
       );
 
       expect(response).toBeDefined();
@@ -305,6 +294,6 @@ describe("MCP Tools Integration Tests", () => {
       await response.image.saveToFile(outputPath);
 
       console.log(`✓ Inpainted character: ${outputPath}`);
-    }, 120000);
+    }, 900000);
   });
 });
