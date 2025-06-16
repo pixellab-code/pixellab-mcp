@@ -6,8 +6,8 @@ export async function sleep(ms: number): Promise<void> {
 
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 2000
+  maxRetries: number = 5,
+  baseDelay: number = 5000
 ): Promise<T> {
   let lastError: Error;
 
@@ -17,10 +17,14 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       lastError = error as Error;
 
-      // Only retry on rate limit errors, like pixellab-js does
-      if (error instanceof Error && 
-          error.message.includes('rate limit') && 
-          attempt < maxRetries) {
+      // Check for rate limit errors - both RateLimitError instances and message text
+      const isRateLimit =
+        error instanceof RateLimitError ||
+        (error instanceof Error &&
+          (error.message.includes("rate limit") ||
+            error.message.includes("wait longer between generations")));
+
+      if (isRateLimit && attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
         console.log(
           `Rate limit hit, waiting ${delay}ms before retry ${
