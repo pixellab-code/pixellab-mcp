@@ -114,7 +114,53 @@ Extract skeleton structure from character images.
 - `image_path` (required): Path to character image
 - `show_image` (default: false): Show the original image with skeleton data to the AI assistant
 
-### 6. `get_balance`
+### 6. `animate_with_skeleton`
+
+Create animated pixel art sequences using skeleton keyframes. Define keypoints for different poses to create smooth animations.
+
+**Parameters:**
+
+- `skeleton_frames` (required): Array of skeleton frames defining the animation sequence
+  - Each frame contains `keypoints` array with `x`, `y`, `label`, and optional `z_index`
+  - Supported labels: "NOSE", "NECK", "RIGHT SHOULDER", "RIGHT ELBOW", "RIGHT ARM", "LEFT SHOULDER", "LEFT ELBOW", "LEFT ARM", "RIGHT HIP", "RIGHT KNEE", "RIGHT LEG", "LEFT HIP", "LEFT KNEE", "LEFT LEG", "RIGHT EYE", "LEFT EYE", "RIGHT EAR", "LEFT EAR"
+- `reference_image_path` (optional): Path to reference image for character appearance
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
+- `view` (default: "side"): Camera viewpoint ("side", "low top-down", "high top-down")
+- `direction` (default: "east"): Character facing direction ("south", "east", "north", "west", etc.)
+- `reference_guidance_scale` (default: 1.1): How closely to follow reference image (1.0-20.0)
+- `pose_guidance_scale` (default: 3.0): How closely to follow skeleton poses (1.0-20.0)
+- `isometric` (default: false): Use isometric projection
+- `oblique_projection` (default: false): Use oblique projection
+- `init_image_strength` (default: 300): Strength of initialization images (0-1000)
+- `seed` (default: 0): Random seed for reproducible results
+- `save_to_file` (optional): Path template to save animation frames (e.g., "./animation.png")
+- `show_image` (default: false): Show the generated animation frames to the AI assistant
+
+### 7. `animate_with_text`
+
+Create animated pixel art sequences from text descriptions. Requires a reference character image and describes the action to animate.
+
+**Parameters:**
+
+- `description` (required): Description of the character to animate (e.g., "knight in armor", "wizard with staff")
+- `action` (required): Action to animate (e.g., "walking", "swinging sword", "casting spell")
+- `reference_image_path` (required): Path to reference character image to animate
+- `width` (default: 64): Image width in pixels (recommended: 32, 64, 128, 256)
+- `height` (default: 64): Image height in pixels (recommended: 32, 64, 128, 256)
+- `view` (default: "side"): Camera viewpoint ("side", "low top-down", "high top-down")
+- `direction` (default: "east"): Character facing direction ("south", "east", "north", "west", etc.)
+- `negative_description` (optional): What to avoid in the animation (e.g., "blurry, distorted")
+- `text_guidance_scale` (default: 7.5): How closely to follow text description (1.0-20.0)
+- `image_guidance_scale` (default: 1.5): How closely to follow reference image (1.0-20.0)
+- `n_frames` (default: 4): Number of animation frames to generate (1-20)
+- `start_frame_index` (default: 0): Starting frame index (for continuing animations)
+- `init_image_strength` (default: 300): Strength of initialization images (1-999)
+- `seed` (default: 0): Random seed for reproducible results
+- `save_to_file` (optional): Path template to save animation frames (e.g., "./walk_cycle.png")
+- `show_image` (default: false): Show the generated animation frames to the AI assistant
+
+### 8. `get_balance`
 
 Check available PixelLab API credits.
 
@@ -128,6 +174,9 @@ Once configured with your MCP client, you can use natural language to interact w
 - "Create a pixel art character in the style of this reference image"
 - "Rotate this character sprite to face east"
 - "Add a hat to this character using inpainting"
+- "Analyze the skeleton structure of this character"
+- "Create a walking animation for this character"
+- "Animate this knight swinging a sword"
 - "Check my PixelLab balance"
 
 The AI assistant will call the appropriate tools and display the generated pixel art immediately when `show_image` is enabled.
@@ -198,7 +247,7 @@ This MCP server is built as a lightweight wrapper around the [@pixellab-code/pix
 
 ## Tool Architecture
 
-The server implements 6 modular tools:
+The server implements 8 modular tools:
 
 - `src/tools/generatePixelArt.ts` - Pixflux text-to-pixel-art generation
 - `src/tools/generatePixelArtWithStyle.ts` - Bitforge style-transfer generation
@@ -206,6 +255,8 @@ The server implements 6 modular tools:
 - `src/tools/rotateCharacter.ts` - Character rotation with comparisons
 - `src/tools/inpaintPixelArt.ts` - Region-based editing with comparisons
 - `src/tools/estimateSkeleton.ts` - Skeleton detection with visualization
+- `src/tools/animateWithSkeleton.ts` - Skeleton-based animation generation
+- `src/tools/animateWithText.ts` - Text-based animation generation
 
 ## Dependencies
 
@@ -246,15 +297,17 @@ npm install -g pixellab-mcp
 }
 ```
 
-**Problem**: Server shows fewer than 6 tools
+**Problem**: Server shows fewer than 8 tools
 
-**Solution**: You should see these 6 tools:
+**Solution**: You should see these 8 tools:
 - `generate_image_pixflux`
 - `generate_image_bitforge`
 - `get_balance`
 - `rotate`
 - `inpaint`
 - `estimate_skeleton`
+- `animate_with_skeleton`
+- `animate_with_text`
 
 If you see fewer, try:
 1. Restart your MCP client completely

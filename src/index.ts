@@ -12,6 +12,8 @@ import { getBalance } from "./tools/getBalance.js";
 import { rotateCharacter } from "./tools/rotateCharacter.js";
 import { inpaintPixelArt } from "./tools/inpaintPixelArt.js";
 import { estimateSkeleton } from "./tools/estimateSkeleton.js";
+import { animateWithSkeleton } from "./tools/animateWithSkeleton.js";
+import { animateWithText } from "./tools/animateWithText.js";
 
 // Load environment variables
 dotenv.config();
@@ -310,6 +312,173 @@ server.tool(
       ),
   },
   async (args) => estimateSkeleton(args, client)
+);
+
+server.tool(
+  "animate_with_skeleton",
+  "Create animated pixel art sequences using skeleton keyframes. Define keypoints for different poses to create smooth animations.",
+  {
+    skeleton_frames: z
+      .array(z.object({
+        keypoints: z.array(z.object({
+          x: z.number().describe("X coordinate of the keypoint"),
+          y: z.number().describe("Y coordinate of the keypoint"),
+          label: z.enum([
+            "NOSE", "NECK", "RIGHT SHOULDER", "RIGHT ELBOW", "RIGHT ARM",
+            "LEFT SHOULDER", "LEFT ELBOW", "LEFT ARM", "RIGHT HIP", "RIGHT KNEE",
+            "RIGHT LEG", "LEFT HIP", "LEFT KNEE", "LEFT LEG", "RIGHT EYE",
+            "LEFT EYE", "RIGHT EAR", "LEFT EAR"
+          ]).describe("Skeleton joint label"),
+          z_index: z.number().default(0.0).describe("Depth ordering (higher = in front)"),
+        })),
+      }))
+      .describe("Array of skeleton frames defining the animation sequence"),
+    reference_image_path: z
+      .string()
+      .optional()
+      .describe("Optional path to reference image for character appearance"),
+    width: z
+      .number()
+      .default(64)
+      .describe("Output image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe("Output image height in pixels (recommended: 32, 64, 128, 256)"),
+    view: z
+      .enum(["side", "low top-down", "high top-down"])
+      .default("side")
+      .describe("Camera viewpoint for the animation"),
+    direction: z
+      .enum([
+        "south", "south-east", "east", "north-east", 
+        "north", "north-west", "west", "south-west"
+      ])
+      .default("east")
+      .describe("Character facing direction"),
+    reference_guidance_scale: z
+      .number()
+      .min(1.0)
+      .max(20.0)
+      .default(1.1)
+      .describe("How closely to follow reference image (1.0-20.0)"),
+    pose_guidance_scale: z
+      .number()
+      .min(1.0)
+      .max(20.0)
+      .default(3.0)
+      .describe("How closely to follow skeleton poses (1.0-20.0)"),
+    isometric: z
+      .boolean()
+      .default(false)
+      .describe("Use isometric projection"),
+    oblique_projection: z
+      .boolean()
+      .default(false)
+      .describe("Use oblique projection"),
+    init_image_strength: z
+      .number()
+      .min(0)
+      .max(1000)
+      .default(300)
+      .describe("Strength of initialization images (0-1000)"),
+    seed: z
+      .number()
+      .default(0)
+      .describe("Random seed for reproducible results"),
+    save_to_file: z
+      .string()
+      .optional()
+      .describe("Optional file path template to save animation frames (e.g., './animation.png')"),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe("Whether to show the generated animation frames to the AI assistant"),
+  },
+  async (args) => animateWithSkeleton(args, client)
+);
+
+server.tool(
+  "animate_with_text",
+  "Create animated pixel art sequences from text descriptions. Requires a reference character image and describes the action to animate.",
+  {
+    description: z
+      .string()
+      .min(1)
+      .describe("Description of the character to animate (e.g., 'knight in armor', 'wizard with staff')"),
+    action: z
+      .string()
+      .min(1)
+      .describe("Action to animate (e.g., 'walking', 'swinging sword', 'casting spell')"),
+    reference_image_path: z
+      .string()
+      .describe("Path to reference character image to animate"),
+    width: z
+      .number()
+      .default(64)
+      .describe("Output image width in pixels (recommended: 32, 64, 128, 256)"),
+    height: z
+      .number()
+      .default(64)
+      .describe("Output image height in pixels (recommended: 32, 64, 128, 256)"),
+    view: z
+      .enum(["side", "low top-down", "high top-down"])
+      .default("side")
+      .describe("Camera viewpoint for the animation"),
+    direction: z
+      .enum([
+        "south", "south-east", "east", "north-east", 
+        "north", "north-west", "west", "south-west"
+      ])
+      .default("east")
+      .describe("Character facing direction"),
+    negative_description: z
+      .string()
+      .optional()
+      .describe("What to avoid in the animation (e.g., 'blurry, distorted')"),
+    text_guidance_scale: z
+      .number()
+      .min(1.0)
+      .max(20.0)
+      .default(7.5)
+      .describe("How closely to follow text description (1.0-20.0)"),
+    image_guidance_scale: z
+      .number()
+      .min(1.0)
+      .max(20.0)
+      .default(1.5)
+      .describe("How closely to follow reference image (1.0-20.0)"),
+    n_frames: z
+      .number()
+      .min(1)
+      .max(20)
+      .default(4)
+      .describe("Number of animation frames to generate (1-20)"),
+    start_frame_index: z
+      .number()
+      .min(0)
+      .default(0)
+      .describe("Starting frame index (for continuing animations)"),
+    init_image_strength: z
+      .number()
+      .min(1)
+      .max(999)
+      .default(300)
+      .describe("Strength of initialization images (1-999)"),
+    seed: z
+      .number()
+      .default(0)
+      .describe("Random seed for reproducible results"),
+    save_to_file: z
+      .string()
+      .optional()
+      .describe("Optional file path template to save animation frames (e.g., './walk_cycle.png')"),
+    show_image: z
+      .boolean()
+      .default(false)
+      .describe("Whether to show the generated animation frames to the AI assistant"),
+  },
+  async (args) => animateWithText(args, client)
 );
 
 // Start the server
