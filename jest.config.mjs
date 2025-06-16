@@ -1,11 +1,6 @@
 export default {
   preset: "ts-jest/presets/default-esm",
   extensionsToTreatAsEsm: [".ts"],
-  globals: {
-    "ts-jest": {
-      useESM: true,
-    },
-  },
   testEnvironment: "node",
   testMatch: ["**/tests/**/*.test.ts", "**/tests/**/*.spec.ts"],
   moduleFileExtensions: ["ts", "js", "json"],
@@ -26,6 +21,5 @@ export default {
   collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
   roots: ["<rootDir>/src", "<rootDir>/tests"],
   maxWorkers: 1,
-  testTimeout: 300000,
   setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
 };

@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18, 20]
+        node-version: [16, 18, 20]
 
     steps:
       - uses: actions/checkout@v4
@@ -35,8 +35,7 @@ jobs:
           echo "PIXELLAB_SECRET=${{ secrets.PIXELLAB_SECRET }}" > .env.development.secrets
 
       - name: Run tests
-        run: npm test -- --maxWorkers=1 --testTimeout=900000
-        timeout-minutes: 30
+        run: npm test
 
       - name: Build package
         run: npm run build
