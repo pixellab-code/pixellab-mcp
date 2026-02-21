@@ -2,6 +2,10 @@
 
 Enable "Vibe Coding" with PixelLab's Model Context Protocol (MCP) server. Generate pixel art characters, animations, and tilesets directly from your AI coding assistant!
 
+<a href="https://glama.ai/mcp/servers/@samedii/PixelLab">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@samedii/PixelLab/badge" alt="PixelLab MCP server" />
+</a>
+
 ## 🚀 Quick Start
 
 Visit our interactive setup guide at: **[https://www.pixellab.ai/vibe-coding](https://www.pixellab.ai/vibe-coding)**
