@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/pixellab-code-pixellab-mcp-badge.png)](https://mseep.ai/app/pixellab-code-pixellab-mcp)
+
 # PixelLab MCP - Vibe Coding AI Toolkit 🎨🤖
 
 Enable "Vibe Coding" with PixelLab's Model Context Protocol (MCP) server. Generate pixel art characters, animations, and tilesets directly from your AI coding assistant!
